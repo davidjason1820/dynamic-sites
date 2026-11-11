@@ -5,7 +5,7 @@
     "interactions": 10,
     "total": 87
   },
-  "externalCatalogedUnits": 13020,
+  "externalCatalogedUnits": 12933,
   "externalCollections": [
     [
       "motionsites-extended-prompts",
@@ -78,5 +78,7 @@
       "Check each linked repository and demo license individually."
     ]
   ],
-  "note": "Counts are inventory records; they do not imply ownership or permission to redistribute third-party assets."
+  "note": "Counts are inventory records; they do not imply ownership or permission to redistribute third-party assets.",
+  "totalCatalogedUnits": 13020,
+  "calculation": "87 core resources + 12,933+ external lower-bound units = 13,020+ total cataloged units."
 }

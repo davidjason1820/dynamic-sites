@@ -1,0 +1,63 @@
+{
+  "core": {
+    "prompts": 65,
+    "backgrounds": 12,
+    "interactions": 10,
+    "total": 87
+  },
+  "externalLowerBound": 12933,
+  "totalLowerBound": 13020,
+  "formula": "87 core + 12,933+ external = 13,020+ total",
+  "externalBreakdown": [
+    {
+      "label": "External prompts",
+      "count": 813,
+      "isLowerBound": false
+    },
+    {
+      "label": "Claude prompts",
+      "count": 40,
+      "isLowerBound": false
+    },
+    {
+      "label": "Cinematic videos",
+      "count": 50,
+      "isLowerBound": true
+    },
+    {
+      "label": "Transparent 3D cut-outs",
+      "count": 30,
+      "isLowerBound": false
+    },
+    {
+      "label": "Images",
+      "count": 29,
+      "isLowerBound": false
+    },
+    {
+      "label": "Technique recipes",
+      "count": 55,
+      "isLowerBound": true
+    },
+    {
+      "label": "React Bits components/backgrounds",
+      "count": 215,
+      "isLowerBound": true
+    },
+    {
+      "label": "GLB models",
+      "count": 991,
+      "isLowerBound": true
+    },
+    {
+      "label": "Poly Pizza models",
+      "count": 10700,
+      "isLowerBound": true
+    },
+    {
+      "label": "Codrops entries",
+      "count": 10,
+      "isLowerBound": false
+    }
+  ]
+}

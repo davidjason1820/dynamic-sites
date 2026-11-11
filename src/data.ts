@@ -168,4 +168,5 @@ export const externalCatalog: ExternalCatalogItem[] = [
   { label: 'Codrops entries', count: 10, note: 'External tutorial/demo references.' },
 ]
 
+export const externalCatalogedUnits = 12933
 export const catalogedResourceUnits = 13020

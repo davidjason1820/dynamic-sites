@@ -34,7 +34,7 @@ The website currently displays 107 individual cards:
 - 10 external collection records
 - 10 Codrops records
 
-The catalog inventory identifies approximately 13,020 units across the wider external collections. Those 13,020 units are not yet all represented as separate item-level JSON records. Collection counts must not be presented as individual imported records until item-level manifests have been collected, deduplicated, and license-verified.
+The catalog inventory identifies approximately 12,933+ external units across the wider external collections. Those 12,933+ external units are not yet all represented as separate item-level JSON records. Collection counts must not be presented as individual imported records until item-level manifests have been collected, deduplicated, and license-verified.
 
 ## Import rules
 
