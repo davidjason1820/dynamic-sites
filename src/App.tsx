@@ -9,12 +9,15 @@ const tabs: Array<{ label: string; value: FilterTab }> = [
   { label: 'Prompts', value: 'prompt' },
   { label: 'Backgrounds', value: 'background' },
   { label: 'Interactions', value: 'interaction' },
+  { label: 'External', value: 'external' },
 ]
 
 function typeLabel(type: Resource['type']) {
   if (type === 'prompt') return 'Prompt'
   if (type === 'background' || type === 'shader') return 'Background'
   if (type === '3d-model') return '3D / WebGL'
+  if (type === 'resource') return 'Library'
+  if (type === 'tutorial') return 'Tutorial'
   return 'Interaction'
 }
 
@@ -136,7 +139,7 @@ export default function App() {
         </section>
 
         <section className="library-section" id="library"><div className="section-heading"><div><p className="eyebrow">{isSavedRoute ? '05 / Saved resources' : routeSection ? `Explore / ${routeSection}` : '01 / Browse the collection'}</p><h2>{isSavedRoute ? <>Your saved <em>collection.</em></> : <>Find your next <em>starting point.</em></>}</h2></div><p className="section-note">{isSavedRoute ? (saved.length ? 'A focused shelf of the ideas you want to keep close.' : 'Nothing saved yet. Bookmark a resource to build this shelf.') : 'A curated system of references, recipes, and building blocks. Save what sparks something.'}</p></div>
-          <div className="toolbar"><div className="tabs">{tabs.map(tab => <button key={tab.value} className={activeTab === tab.value && !routeSection ? 'active' : ''} onClick={() => changeTab(tab.value)}>{tab.label}<span>{tab.value === 'all' ? allResources.length : tab.value === 'prompt' ? coreCounts.prompts : tab.value === 'background' ? coreCounts.backgrounds : coreCounts.interactions}</span></button>)}</div><div className="toolbar-right"><select value={category} onChange={event => { setCategory(event.target.value); setPage(1) }} aria-label="Filter by category">{categories.map(item => <option key={item}>{item}</option>)}</select><select value={tag} onChange={event => { setTag(event.target.value); setPage(1) }} aria-label="Filter by tag">{tags.map(item => <option key={item}>{item}</option>)}</select><span className="result-count">{filtered.length} results</span></div></div>
+        <div className="toolbar"><div className="tabs">{tabs.map(tab => <button key={tab.value} className={activeTab === tab.value && !routeSection ? 'active' : ''} onClick={() => changeTab(tab.value)}>{tab.label}<span>{tab.value === 'all' ? allResources.length : tab.value === 'prompt' ? coreCounts.prompts : tab.value === 'background' ? coreCounts.backgrounds : tab.value === 'interaction' ? coreCounts.interactions : allResources.filter(item => item.section === 'external').length}</span></button>)}</div><div className="toolbar-right"><select value={category} onChange={event => { setCategory(event.target.value); setPage(1) }} aria-label="Filter by category">{categories.map(item => <option key={item}>{item}</option>)}</select><select value={tag} onChange={event => { setTag(event.target.value); setPage(1) }} aria-label="Filter by tag">{tags.map(item => <option key={item}>{item}</option>)}</select><span className="result-count">{filtered.length} results</span></div></div>
           {showFilters && <div className="filter-drawer"><span>Filter by type</span>{tabs.map(tab => <button key={tab.value} onClick={() => changeTab(tab.value)}>{tab.label}</button>)}<button onClick={() => { setQuery(''); setCategory('All categories'); setTag('All tags'); setActiveTab('all'); setPage(1) }}>Reset</button></div>}
           <div className="resource-grid">{visible.map(resource => <ResourceCard key={resource.id} resource={resource} saved={saved.includes(resource.id)} onSave={() => toggleSaved(resource.id)} onOpen={() => openResource(resource)} onCopy={() => copy(resource.prompt, 'Prompt')} />)}</div>
           <div className="pagination"><span>Showing {filtered.length ? (page - 1) * perPage + 1 : 0}–{Math.min(page * perPage, filtered.length)} of {filtered.length}</span><div>{Array.from({ length: pages }, (_, index) => index + 1).map(number => <button key={number} className={page === number ? 'current' : ''} onClick={() => setPage(number)}>{String(number).padStart(2, '0')}</button>)}</div></div>

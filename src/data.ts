@@ -1,5 +1,7 @@
-export type ResourceSection = 'prompt' | 'background' | 'interaction'
-export type CatalogType = 'prompt' | 'code' | 'component' | 'background' | '3d-model' | 'shader' | 'demo'
+import { externalResources } from './externalData'
+
+export type ResourceSection = 'prompt' | 'background' | 'interaction' | 'external'
+export type CatalogType = 'prompt' | 'code' | 'component' | 'background' | '3d-model' | 'texture' | 'hdri' | 'shader' | 'demo' | 'tutorial' | 'resource'
 
 export type Resource = {
   id: string
@@ -143,7 +145,7 @@ export const interactions: Resource[] = interactionNames.map(([title, type, sour
   }
 })
 
-export const allResources = [...prompts, ...backgrounds, ...interactions]
+export const allResources = [...prompts, ...backgrounds, ...interactions, ...externalResources]
 
 export const coreCounts = {
   prompts: prompts.length,
