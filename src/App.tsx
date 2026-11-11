@@ -12,6 +12,13 @@ const tabs: Array<{ label: string; value: FilterTab }> = [
   { label: 'External', value: 'external' },
 ]
 
+const categoryHighlights = [
+  { label: 'Prompts', description: 'Landing pages and product narratives', count: coreCounts.prompts, route: '/explore/prompts' },
+  { label: 'Motion', description: 'Backgrounds and ambient loops', count: coreCounts.backgrounds, route: '/explore/backgrounds' },
+  { label: 'Interactions', description: 'Buttons, menus, scroll, and UI motion', count: coreCounts.interactions, route: '/explore/components' },
+  { label: 'Collections', description: 'External sources, attributions, and references', count: externalCatalog.length, route: '/about' },
+]
+
 function typeLabel(type: Resource['type']) {
   if (type === 'prompt') return 'Prompt'
   if (type === 'background' || type === 'shader') return 'Background'
@@ -32,6 +39,10 @@ function sectionFromRoute(path: string): ResourceSection | null {
   return null
 }
 
+function formatCount(value: number) {
+  return new Intl.NumberFormat('en-US').format(value)
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [query, setQuery] = useState('')
@@ -48,14 +59,23 @@ export default function App() {
   const routeSection = sectionFromRoute(route)
   const isSavedRoute = route === '/saved'
   const isInfoRoute = route === '/about' || route === '/submit'
+  const featured = prompts[0] ?? allResources[0]
 
   const categories = useMemo(() => ['All categories', ...Array.from(new Set(allResources.map(resource => resource.category)))], [])
   const tags = useMemo(() => ['All tags', ...Array.from(new Set(allResources.flatMap(resource => resource.tags)))], [])
+
   const filtered = useMemo(() => allResources.filter(resource => {
     const haystack = `${resource.title} ${resource.description} ${resource.category} ${resource.tags.join(' ')} ${resource.technologies.join(' ')} ${resource.prompt} ${resource.attribution}`.toLowerCase()
     const selectedSection = routeSection || activeTab
-    return (isSavedRoute ? saved.includes(resource.id) : true) && (selectedSection === 'all' || resource.section === selectedSection) && (category === 'All categories' || resource.category === category) && (tag === 'All tags' || resource.tags.includes(tag)) && haystack.includes(query.toLowerCase())
+    const matchesQuery = !query || haystack.includes(query.toLowerCase())
+    const matchesCategory = category === 'All categories' || resource.category === category
+    const matchesTag = tag === 'All tags' || resource.tags.includes(tag)
+    const matchesSaved = !isSavedRoute || saved.includes(resource.id)
+    const matchesRoute = selectedSection === 'all' || resource.section === selectedSection
+
+    return matchesQuery && matchesCategory && matchesTag && matchesSaved && matchesRoute
   }), [activeTab, category, isSavedRoute, query, routeSection, saved, tag])
+
   const pages = Math.max(1, Math.ceil(filtered.length / perPage))
   const visible = filtered.slice((page - 1) * perPage, page * perPage)
 
@@ -119,54 +139,397 @@ export default function App() {
 
   return <div className="app-shell">
     <div className="noise" />
+
     <header className="topbar">
-      <a className="brand" href="/" onClick={event => { event.preventDefault(); navigate('/') }} aria-label="Dynamic Sites home"><span className="brand-mark"><i>D</i><i>S</i></span><span>dynamic<span className="brand-dot">.</span>sites</span></a>
+      <a className="brand" href="/" onClick={event => { event.preventDefault(); navigate('/') }} aria-label="Dynamic Sites home">
+        <span className="brand-mark"><span className="brand-mark-inner">DS</span></span>
+        <span className="brand-word">dynamic<span className="brand-dot">.</span>sites</span>
+      </a>
+
       <nav className="desktop-nav" aria-label="Primary navigation">
         <a href="/explore" onClick={event => { event.preventDefault(); navigate('/explore') }}>Explore</a>
         <a href="/explore/backgrounds" onClick={event => { event.preventDefault(); navigate('/explore/backgrounds') }}>Backgrounds</a>
         <a href="/explore/components" onClick={event => { event.preventDefault(); navigate('/explore/components') }}>Interactions</a>
         <a href="/saved" onClick={event => { event.preventDefault(); navigate('/saved') }}>Saved <span className="nav-count">{saved.length}</span></a>
       </nav>
-      <div className="top-actions"><button className="icon-button" onClick={() => setShowFilters(!showFilters)} aria-label="Toggle filters"><Filter size={17} /></button><button className="menu-button" onClick={() => setShowFilters(!showFilters)} aria-label="Menu"><Menu size={18} /></button><a className="outline-button" href="/explore" onClick={event => { event.preventDefault(); navigate('/explore') }}>Explore <ArrowUpRight size={16} /></a></div>
+
+      <div className="top-actions">
+        <button className="icon-button" onClick={() => setShowFilters(!showFilters)} aria-label="Toggle filters"><Filter size={17} /></button>
+        <button className="menu-button" aria-label="Open menu"><Menu size={17} /></button>
+        <button className="outline-button" onClick={() => navigate('/about')}>About</button>
+      </div>
     </header>
 
     <main id="top">
       {isInfoRoute ? <InfoPage route={route} onNavigate={navigate} /> : <>
         <section className="hero">
-          <div className="hero-orbit orbit-one" /><div className="hero-orbit orbit-two" />
-          <div className="hero-copy"><p className="eyebrow"><span className="pulse-dot" /> A living library for digital makers</p><h1>Build the <em>remarkable.</em></h1><p className="hero-lede">Prompts, motion, code, and 3D resources for people who care about the final 10%.</p><div className="hero-search"><Search size={20} /><input value={query} onChange={event => { setQuery(event.target.value); setPage(1) }} placeholder="Search prompts, motion, code..." /><kbd>⌘ / Ctrl K</kbd></div><div className="hero-meta"><span><strong>{coreCounts.prompts}</strong> core prompts</span><span><strong>{coreCounts.backgrounds}</strong> backgrounds</span><span><strong>{coreCounts.interactions}</strong> interactions</span><span><strong>{catalogedResourceUnits.toLocaleString()}+</strong> total cataloged units</span></div></div>
-          <div className="hero-card"><div className="hero-card-visual"><div className="visual-grid" /><div className="visual-glow" /><span className="hero-card-label">Featured prompt / 001</span><span className="hero-card-title">Liquid intelligence<br /><em>in motion.</em></span><span className="hero-card-corner">DS / 01</span></div><div className="hero-card-footer"><span>AI Designer Agency</span><button onClick={() => openResource(prompts[0])}>View prompt <ArrowUpRight size={14} /></button></div></div>
+          <div className="hero-copy">
+            <p className="eyebrow"><span className="pulse-dot" /> A living library for digital makers</p>
+            <h1>Build the <em>remarkable.</em></h1>
+            <p className="hero-lede">Curated prompts, motion backgrounds, and interaction patterns for modern product sites, portfolios, launches, and narrative-first experiences.</p>
+
+            <div className="hero-search">
+              <Search size={16} />
+              <input
+                aria-label="Search resources"
+                value={query}
+                onChange={event => { setQuery(event.target.value); setPage(1) }}
+                placeholder="Search prompts, tags, technologies, categories"
+              />
+            </div>
+
+            <div className="hero-actions">
+              <button className="primary-button" onClick={() => navigate('/explore')}>
+                Explore resources
+                <ArrowUpRight size={16} />
+              </button>
+              <button className="secondary-button" onClick={() => navigate('/explore/backgrounds')}>
+                Browse motion
+              </button>
+            </div>
+
+            <div className="hero-metrics">
+              <div>
+                <strong>{formatCount(coreCounts.prompts)}</strong>
+                <span>prompt directions</span>
+              </div>
+              <div>
+                <strong>{formatCount(coreCounts.backgrounds)}</strong>
+                <span>ambient loops</span>
+              </div>
+              <div>
+                <strong>{formatCount(coreCounts.interactions)}</strong>
+                <span>interaction recipes</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-preview" style={{ '--accent': featured.accent } as React.CSSProperties}>
+            <div className="browser-bar">
+              <span className="browser-dot dot-red" />
+              <span className="browser-dot dot-yellow" />
+              <span className="browser-dot dot-green" />
+              <span className="browser-address">dynamic-sites.app</span>
+            </div>
+
+            <div className="preview-window">
+              <div className="preview-top-row">
+                <div>
+                  <p className="preview-label">Featured prompt</p>
+                  <h3>{featured.title}</h3>
+                </div>
+                <button className="preview-save" onClick={() => toggleSaved(featured.id)} aria-label="Save featured resource">
+                  <Bookmark size={14} fill={saved.includes(featured.id) ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+
+              <div className="preview-hero-block">
+                <div className="preview-hero-copy">
+                  <span className="small-tag">{featured.category}</span>
+                  <p>{featured.description}</p>
+                  <div className="preview-cta-row">
+                    <button className="mini-primary" onClick={() => openResource(featured)}>Open</button>
+                    <button className="mini-ghost" onClick={() => copy(featured.prompt, 'Prompt')}>Copy</button>
+                  </div>
+                </div>
+                <div className="preview-hero-art">
+                  <div className="art-panel giant" />
+                  <div className="art-panel small" />
+                </div>
+              </div>
+
+              <div className="preview-cards-row">
+                <div className="stat-card">
+                  <span>Hero</span>
+                  <strong>07</strong>
+                </div>
+                <div className="stat-card">
+                  <span>CTA</span>
+                  <strong>02</strong>
+                </div>
+                <div className="stat-card highlight">
+                  <span>Motion</span>
+                  <strong>High</strong>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section className="library-section" id="library"><div className="section-heading"><div><p className="eyebrow">{isSavedRoute ? '05 / Saved resources' : routeSection ? `Explore / ${routeSection}` : '01 / Browse the collection'}</p><h2>{isSavedRoute ? <>Your saved <em>collection.</em></> : <>Find your next <em>starting point.</em></>}</h2></div><p className="section-note">{isSavedRoute ? (saved.length ? 'A focused shelf of the ideas you want to keep close.' : 'Nothing saved yet. Bookmark a resource to build this shelf.') : 'A curated system of references, recipes, and building blocks. Save what sparks something.'}</p></div>
-        <div className="toolbar"><div className="tabs">{tabs.map(tab => <button key={tab.value} className={activeTab === tab.value && !routeSection ? 'active' : ''} onClick={() => changeTab(tab.value)}>{tab.label}<span>{tab.value === 'all' ? allResources.length : tab.value === 'prompt' ? coreCounts.prompts : tab.value === 'background' ? coreCounts.backgrounds : tab.value === 'interaction' ? coreCounts.interactions : allResources.filter(item => item.section === 'external').length}</span></button>)}</div><div className="toolbar-right"><select value={category} onChange={event => { setCategory(event.target.value); setPage(1) }} aria-label="Filter by category">{categories.map(item => <option key={item}>{item}</option>)}</select><select value={tag} onChange={event => { setTag(event.target.value); setPage(1) }} aria-label="Filter by tag">{tags.map(item => <option key={item}>{item}</option>)}</select><span className="result-count">{filtered.length} results</span></div></div>
-          {showFilters && <div className="filter-drawer"><span>Filter by type</span>{tabs.map(tab => <button key={tab.value} onClick={() => changeTab(tab.value)}>{tab.label}</button>)}<button onClick={() => { setQuery(''); setCategory('All categories'); setTag('All tags'); setActiveTab('all'); setPage(1) }}>Reset</button></div>}
-          <div className="resource-grid">{visible.map(resource => <ResourceCard key={resource.id} resource={resource} saved={saved.includes(resource.id)} onSave={() => toggleSaved(resource.id)} onOpen={() => openResource(resource)} onCopy={() => copy(resource.prompt, 'Prompt')} />)}</div>
-          <div className="pagination"><span>Showing {filtered.length ? (page - 1) * perPage + 1 : 0}–{Math.min(page * perPage, filtered.length)} of {filtered.length}</span><div>{Array.from({ length: pages }, (_, index) => index + 1).map(number => <button key={number} className={page === number ? 'current' : ''} onClick={() => setPage(number)}>{String(number).padStart(2, '0')}</button>)}</div></div>
+        <section className="category-showcase">
+          {categoryHighlights.map(item => (
+            <button key={item.label} className="category-tile" onClick={() => navigate(item.route)}>
+              <div className="category-tile-top">
+                <span className="category-name">{item.label}</span>
+                <span className="category-count">{item.count}</span>
+              </div>
+              <p>{item.description}</p>
+            </button>
+          ))}
         </section>
 
-        <section className="catalog-scope"><div><p className="eyebrow">05 / Catalog scope</p><h2>87 core resources.<br /><em>12,933+ external units.</em></h2><p>Dynamic Sites keeps its core collection separate from the broader external inventory. External collections stay attributed and are not presented as owned repositories or redistributed assets. Together, the 87 core resources and 12,933+ external lower-bound units represent 13,020+ cataloged units.</p></div><div className="scope-grid">{externalCatalog.slice(0, 6).map(item => <div className="scope-card" key={item.label}><strong>{item.count.toLocaleString()}{item.suffix || ''}</strong><span>{item.label}</span></div>)}</div></section>
+        <section className="library-section" id="library">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{isSavedRoute ? '05 / Saved resources' : routeSection ? `Explore / ${routeSection}` : '01 / Explore library'}</p>
+              <h2>{isSavedRoute ? 'Your saved picks' : 'Discover the library'}</h2>
+            </div>
+            <div className="heading-inline">
+              <span>{filtered.length} results</span>
+            </div>
+          </div>
 
-        <section className="split-section" id="backgrounds"><div className="split-copy"><p className="eyebrow">02 / Ambient backgrounds</p><h2>Give the page a <em>pulse.</em></h2><p>Loops, shaders, and spatial atmospheres that make the first viewport feel alive without fighting the content.</p><button className="text-button" onClick={() => navigate('/explore/backgrounds')}>Explore backgrounds <ArrowUpRight size={16} /></button></div><div className="mini-stack">{backgrounds.slice(0, 3).map((item, index) => <button key={item.id} className={`mini-card mini-${index}`} onClick={() => openResource(item)}><span className="mini-index">0{index + 1}</span><strong>{item.title}</strong><span>{item.tags.slice(0, 3).join(' · ')}</span></button>)}</div></section>
-        <section className="interaction-section" id="interactions"><div className="section-heading"><div><p className="eyebrow">03 / Interaction lab</p><h2>Small physics. <em>Big feeling.</em></h2></div><p className="section-note">Micro-interactions with enough restraint to feel intentional and enough energy to be remembered.</p></div><div className="interaction-row">{interactions.slice(0, 5).map((item, index) => <button key={item.id} className="interaction-tile" onClick={() => openResource(item)} style={{ '--accent': item.accent } as React.CSSProperties}><span>0{index + 1}</span><strong>{item.title}</strong><i><ArrowUpRight size={16} /></i></button>)}</div></section>
-        <section className="saved-section" id="saved"><div className="saved-copy"><p className="eyebrow">04 / Your collection</p><h2>Keep the <em>good stuff.</em></h2><p>{saved.length ? `You have ${saved.length} resource${saved.length === 1 ? '' : 's'} saved for later.` : 'Bookmark ideas as you explore and build your own private shelf of references.'}</p><a href="/saved" className="outline-button" onClick={event => { event.preventDefault(); navigate('/saved') }}>{saved.length ? 'Open saved' : 'Start saving'} <ArrowUpRight size={16} /></a></div><div className="saved-mark"><Bookmark size={34} strokeWidth={1.2} /><span>DS / SAVED</span></div></section>
+          <div className="toolbar">
+            <div className="tabs" aria-label="Resource tabs">
+              {tabs.map(tab => (
+                <button
+                  key={tab.value}
+                  className={activeTab === tab.value && !routeSection ? 'active' : ''}
+                  onClick={() => changeTab(tab.value)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <button className="filter-toggle" onClick={() => setShowFilters(!showFilters)} aria-label="Advanced filters">
+              <Filter size={15} />
+              Filters
+            </button>
+          </div>
+
+          {showFilters && (
+            <div className="filter-drawer">
+              <div className="filter-group">
+                <label>Category</label>
+                <select value={category} onChange={event => { setCategory(event.target.value); setPage(1) }}>
+                  {categories.map(item => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </div>
+              <div className="filter-group">
+                <label>Tag</label>
+                <select value={tag} onChange={event => { setTag(event.target.value); setPage(1) }}>
+                  {tags.map(item => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          <div className="resource-grid">
+            {visible.map(resource => (
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                saved={saved.includes(resource.id)}
+                onSave={() => toggleSaved(resource.id)}
+                onOpen={() => openResource(resource)}
+                onCopy={() => copy(resource.prompt, 'Prompt')}
+              />
+            ))}
+          </div>
+
+          <div className="pagination">
+            <span>
+              Showing {filtered.length ? (page - 1) * perPage + 1 : 0}–{Math.min(page * perPage, filtered.length)} of {filtered.length}
+            </span>
+            <div className="pager-controls">
+              <button onClick={() => setPage(value => Math.max(1, value - 1))} disabled={page === 1}>Prev</button>
+              <button onClick={() => setPage(value => Math.min(pages, value + 1))} disabled={page >= pages}>Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="catalog-scope">
+          <div className="scope-copy">
+            <p className="eyebrow">02 / Catalog scope</p>
+            <h2>87 core resources.<br /><em>12,933+ external units.</em></h2>
+            <p>Dynamic Sites keeps the library intentionally curated: the core catalog stays explicit, sourced, and attributable, while broader external units remain clearly marked as inventory-only references until they are individually verified.</p>
+          </div>
+
+          <div className="scope-grid">
+            {externalCatalog.slice(0, 6).map(item => (
+              <div key={item.label} className="scope-item">
+                <strong>{item.label}</strong>
+                <span>{item.count}{item.suffix || ''}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="split-section" id="backgrounds">
+          <div className="split-copy">
+            <p className="eyebrow">03 / Ambient backgrounds</p>
+            <h2>Give the page a <em>pulse.</em></h2>
+            <p>From parallax loops to procedural depth, the motion layer makes each landing page feel editorial rather than static.</p>
+            <button className="secondary-button" onClick={() => navigate('/explore/backgrounds')}>Browse backgrounds</button>
+          </div>
+
+          <div className="split-preview">
+            <div className="mini-browser-window">
+              <div className="mini-bar" />
+              <div className="mini-screen">
+                <div className="mini-grid" />
+                <div className="mini-orb orb-one" />
+                <div className="mini-orb orb-two" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="interaction-section" id="interactions">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">04 / Interaction lab</p>
+              <h2>Small physics. <em>Big feeling.</em></h2>
+            </div>
+          </div>
+
+          <div className="interaction-grid">
+            {interactions.slice(0, 3).map(resource => (
+              <button key={resource.id} className="interaction-card" onClick={() => openResource(resource)}>
+                <span className="interaction-pill">{typeLabel(resource.type)}</span>
+                <h3>{resource.title}</h3>
+                <p>{resource.description}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="saved-section" id="saved">
+          <div className="saved-copy">
+            <p className="eyebrow">05 / Your collection</p>
+            <h2>Keep the <em>good stuff.</em></h2>
+            <p>{saved.length ? `You have ${saved.length} saved resources ready to revisit.` : 'Save prompts and interactions you want to revisit later.'}</p>
+            <button className="primary-button" onClick={() => navigate('/saved')}>Open saved</button>
+          </div>
+        </section>
       </>}
     </main>
-    <footer><div className="brand footer-brand"><span className="brand-mark"><i>D</i><i>S</i></span><span>dynamic<span className="brand-dot">.</span>sites</span></div><span>For the curious, the precise, and the slightly obsessed.</span><div className="footer-links"><a href="/submit" onClick={event => { event.preventDefault(); navigate('/submit') }}>Submit</a><a href="/about" onClick={event => { event.preventDefault(); navigate('/about') }}>About</a><span>© 2026 Dynamic Sites</span></div></footer>
-    {selected && <DetailModal resource={selected} saved={saved.includes(selected.id)} onClose={closeResource} onSave={() => toggleSaved(selected.id)} onCopyPrompt={() => copy(selected.prompt, 'Prompt')} onCopyCode={() => selected.code && copy(selected.code, 'Code')} />}
+
+    <footer>
+      <div className="brand footer-brand">
+        <span className="brand-mark"><span className="brand-mark-inner">DS</span></span>
+        <span className="brand-word">dynamic<span className="brand-dot">.</span>sites</span>
+      </div>
+      <span>For the curious, the coded, the experimental, and the build-ready.</span>
+    </footer>
+
+    {selected && (
+      <DetailModal
+        resource={selected}
+        saved={saved.includes(selected.id)}
+        onClose={closeResource}
+        onSave={() => toggleSaved(selected.id)}
+        onCopyPrompt={() => copy(selected.prompt, 'Prompt')}
+        onCopyCode={() => copy(selected.code || '', 'Code')}
+      />
+    )}
+
     {toast && <div className="toast"><Check size={15} /> {toast}</div>}
   </div>
 }
 
 function InfoPage({ route, onNavigate }: { route: string; onNavigate: (path: string) => void }) {
   const isSubmit = route === '/submit'
-  return <section className="route-panel"><p className="eyebrow">{isSubmit ? 'Submit Resource' : 'About Dynamic Sites'}</p><h1>{isSubmit ? <>Bring the <em>good stuff.</em></> : <>A living system for <em>better builds.</em></>}</h1><p>{isSubmit ? 'Have a prompt, interaction, shader, or 3D experiment worth sharing? This route is reserved for the submission workflow and keeps attribution at the center.' : 'Dynamic Sites is an independent, source-conscious library for prompts, motion, code, and 3D references. The core collection stays small and inspectable while the external inventory remains clearly attributed.'}</p><div className="route-actions"><button className="outline-button" onClick={() => onNavigate('/explore')}>Explore the core <ArrowUpRight size={15} /></button><button className="text-button" onClick={() => onNavigate('/')}>Back home <ArrowUpRight size={15} /></button></div></section>
+  return <section className="route-panel">
+    <p className="eyebrow">{isSubmit ? 'Submit resource' : 'About Dynamic Sites'}</p>
+    <h1>{isSubmit ? <>Bring the <em>good stuff.</em></> : <>A living system for <em>better web ideas.</em></>}</h1>
+    <p>
+      Dynamic Sites curates prompts, motion backgrounds, and interaction patterns for digital makers. We keep the catalog explicit, source-aware, and easy to browse.
+    </p>
+    <div className="route-actions">
+      <button className="primary-button" onClick={() => onNavigate('/explore')}>
+        Explore catalog
+      </button>
+      <button className="secondary-button" onClick={() => onNavigate('/submit')}>
+        Submit a resource
+      </button>
+    </div>
+  </section>
 }
 
 function ResourceCard({ resource, saved, onSave, onOpen, onCopy }: { resource: Resource; saved: boolean; onSave: () => void; onOpen: () => void; onCopy: () => void }) {
-  return <article className="resource-card"><button className="card-visual" onClick={onOpen} style={{ '--accent': resource.accent } as React.CSSProperties}><div className="card-scanlines" /><div className="card-orb" /><span className="resource-type">{typeIcon(resource.type)} {typeLabel(resource.type)}</span><span className="card-code">DS / {resource.id.split('-')[1].padStart(2, '0')}</span><strong>{resource.title}</strong><span className="card-open">Open <ArrowUpRight size={15} /></span></button><div className="card-body"><div><p className="card-category">{resource.category}</p><h3>{resource.title}</h3><p>{resource.description}</p></div><div className="card-footer"><div className="tag-row">{resource.tags.slice(0, 2).map(tag => <span key={tag}>{tag}</span>)}</div><div className="card-actions"><button onClick={onCopy} aria-label="Copy resource"><Copy size={15} /></button><button onClick={onSave} aria-label="Save resource" className={saved ? 'saved' : ''}><Bookmark size={15} fill={saved ? 'currentColor' : 'none'} /></button></div></div></div></article>
+  return <article className="resource-card">
+    <button className="card-visual" onClick={onOpen} style={{ '--accent': resource.accent } as React.CSSProperties}>
+      <div className="card-scanlines" />
+      <div className="card-window-bar">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="card-window-body">
+        <div className="mini-nav" />
+        <div className="preview-block preview-block-large" />
+        <div className="preview-row">
+          <div className="preview-block preview-block-small" />
+          <div className="preview-block preview-block-small" />
+        </div>
+      </div>
+    </button>
+
+    <div className="card-content">
+      <div className="card-meta">
+        <span className="type-pill">{typeIcon(resource.type)} {typeLabel(resource.type)}</span>
+        <button className="save-button" onClick={onSave} aria-label="Save resource">
+          <Bookmark size={14} fill={saved ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+
+      <h3>{resource.title}</h3>
+      <p>{resource.description}</p>
+
+      <div className="card-tags">
+        {resource.tags.slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}
+      </div>
+
+      <div className="card-actions">
+        <button onClick={onOpen}>Open</button>
+        <button onClick={onCopy}>Copy prompt</button>
+      </div>
+    </div>
+  </article>
 }
 
 function DetailModal({ resource, saved, onClose, onSave, onCopyPrompt, onCopyCode }: { resource: Resource; saved: boolean; onClose: () => void; onSave: () => void; onCopyPrompt: () => void; onCopyCode: () => void }) {
-  return <div className="modal-backdrop" onMouseDown={event => event.currentTarget === event.target && onClose()}><div className="modal"><button className="modal-close" onClick={onClose} aria-label="Close detail"><X size={18} /></button><div className="modal-visual" style={{ '--accent': resource.accent } as React.CSSProperties}><span>{typeLabel(resource.type)} / {resource.category}</span><strong>{resource.title}</strong></div><div className="modal-content"><div className="modal-heading"><div><p className="eyebrow">Resource specification</p><h2>{resource.title}</h2></div><button className={saved ? 'save-button saved' : 'save-button'} onClick={onSave}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /> {saved ? 'Saved' : 'Save'}</button></div><p className="modal-description">{resource.description}</p><div className="modal-tags">{resource.tags.map(tag => <span key={tag}>{tag}</span>)}</div><div className="modal-actions"><button onClick={onCopyPrompt}><Copy size={14} /> Copy prompt</button>{resource.code && <button onClick={onCopyCode}><Code2 size={14} /> Copy code</button>}{resource.liveUrl && <a href={resource.liveUrl} target="_blank" rel="noreferrer"><ArrowUpRight size={14} /> Live demo</a>}{resource.sourceUrl && <a href={resource.sourceUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> View source</a>}</div><div className="prompt-box"><div className="prompt-box-head"><span>{resource.code ? 'Implementation note' : 'Prompt direction'}</span><button onClick={onCopyPrompt}><Copy size={14} /> Copy prompt</button></div><code>{resource.code || resource.prompt}</code></div><div className="modal-meta"><div><span>License</span><strong>{resource.license}</strong></div><div><span>Attribution</span><strong>{resource.attribution}</strong></div><div><span>Commercial use</span><strong>{resource.commercialUse ? 'Allowed subject to source terms' : 'Not cleared for redistribution'}</strong></div><div><span>Redistribution</span><strong>{resource.redistributionAllowed ? 'Allowed with license preserved' : 'Not allowed for bundled media'}</strong></div><div><span>Source</span><a href={resource.sourceUrl} target="_blank" rel="noreferrer">Open source <ExternalLink size={13} /></a></div></div></div></div></div>
+  return <div className="modal-backdrop" onMouseDown={event => event.currentTarget === event.target && onClose()}>
+    <div className="modal">
+      <button className="modal-close" onClick={onClose} aria-label="Close resource details">
+        <X size={16} />
+      </button>
+
+      <div className="modal-header">
+        <div>
+          <p className="eyebrow">{typeLabel(resource.type)}</p>
+          <h3>{resource.title}</h3>
+        </div>
+        <button className="save-button modal-save" onClick={onSave} aria-label="Save resource">
+          <Bookmark size={16} fill={saved ? 'currentColor' : 'none'} />
+        </button>
+      </div>
+
+      <div className="modal-preview" style={{ '--accent': resource.accent } as React.CSSProperties}>
+        <div className="modal-preview-window">
+          <div className="preview-block preview-block-large large-modal" />
+          <div className="preview-row small-row">
+            <div className="preview-block preview-block-small" />
+            <div className="preview-block preview-block-small" />
+          </div>
+        </div>
+      </div>
+
+      <div className="modal-copy">
+        <p>{resource.description}</p>
+        <div className="card-tags">
+          {resource.tags.map(tag => <span key={tag}>{tag}</span>)}
+        </div>
+
+        <div className="modal-actions">
+          <button className="primary-button" onClick={onCopyPrompt}>Copy prompt</button>
+          {resource.code && <button className="secondary-button" onClick={onCopyCode}>Copy code</button>}
+          {resource.liveUrl && <a className="inline-link" href={resource.liveUrl} target="_blank" rel="noreferrer">Live demo <ExternalLink size={14} /></a>}
+          {resource.sourceUrl && <a className="inline-link" href={resource.sourceUrl} target="_blank" rel="noreferrer">Source <ArrowUpRight size={14} /></a>}
+        </div>
+      </div>
+    </div>
+  </div>
 }
