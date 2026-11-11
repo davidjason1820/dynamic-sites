@@ -1,214 +1,351 @@
-import { useMemo, useState } from 'react'
-import { allResources, coreCounts, externalCatalog } from './data'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { libraryResources, type Resource } from './data'
+import { Navbar, type NavTab } from './components/Navbar'
+import { Hero } from './components/Hero'
+import { FilterBar } from './components/FilterBar'
+import { ResourceCard } from './components/ResourceCard'
+import { ResourceModal } from './components/ResourceModal'
+import { SavedEmptyState } from './components/SavedEmptyState'
+import { ToastContainer, type ToastMessage } from './components/Toast'
+import { DynamicLogo } from './components/DynamicLogo'
+import { Sparkles, Video, Layers, Code2, Bookmark, Search } from 'lucide-react'
 
-type FilterKey = 'all' | 'prompt' | 'background' | 'interaction' | 'external'
-
-const tabs: Array<{ label: string; value: FilterKey }> = [
-  { label: 'All', value: 'all' },
-  { label: 'Prompts', value: 'prompt' },
-  { label: 'Backgrounds', value: 'background' },
-  { label: 'Interactions', value: 'interaction' },
-  { label: 'External', value: 'external' },
-]
-
-const sectionLabel: Record<FilterKey, string> = {
-  all: 'All resources',
-  prompt: 'Prompts',
-  background: 'Backgrounds',
-  interaction: 'Interactions',
-  external: 'External resources',
-}
+const SAVED_STORAGE_KEY = 'dynamic_sites_saved_ids'
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<FilterKey>('all')
-  const [query, setQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<NavTab>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedTech, setSelectedTech] = useState('')
+  const [videoOnly, setVideoOnly] = useState(false)
+  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(SAVED_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) return new Set(parsed)
+      }
+    } catch {
+      // Fallback
+    }
+    return new Set<string>()
+  })
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return allResources.filter((resource) => {
-      const matchesTab = activeTab === 'all' || resource.section === activeTab
-      const haystack = `${resource.title} ${resource.description} ${resource.category} ${resource.tags.join(' ')} ${resource.technologies.join(' ')} ${resource.prompt}`.toLowerCase()
-      const matchesQuery = !q || haystack.includes(q)
-      return matchesTab && matchesQuery
+  const [activeModalResource, setActiveModalResource] = useState<Resource | null>(null)
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
+
+  // Persist saved IDs
+  useEffect(() => {
+    try {
+      localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify(Array.from(savedIds)))
+    } catch {
+      // Ignore quota errors
+    }
+  }, [savedIds])
+
+  // Toast helper
+  const addToast = useCallback((title: string, description?: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+    setToasts((prev) => [...prev, { id, title, description, type }])
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, 2800)
+  }, [])
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  // Clipboard copy handler with fallback
+  const handleCopy = useCallback(
+    async (text: string, title: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation()
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text)
+        } else {
+          // Fallback for browsers without clipboard permissions
+          const textarea = document.createElement('textarea')
+          textarea.value = text
+          textarea.style.position = 'fixed'
+          textarea.style.opacity = '0'
+          document.body.appendChild(textarea)
+          textarea.select()
+          document.execCommand('copy')
+          document.body.removeChild(textarea)
+        }
+        addToast('Copied to clipboard!', title, 'success')
+      } catch (err) {
+        addToast('Failed to copy', 'Please copy manually from details view', 'error')
+      }
+    },
+    [addToast]
+  )
+
+  // Save / Bookmark toggle
+  const handleToggleSave = useCallback(
+    (id: string, e?: React.MouseEvent) => {
+      if (e) e.stopPropagation()
+      setSavedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(id)) {
+          next.delete(id)
+          addToast('Removed from saved', undefined, 'info')
+        } else {
+          next.add(id)
+          addToast('Saved to collection', undefined, 'success')
+        }
+        return next
+      })
+    },
+    [addToast]
+  )
+
+  // Derived counts
+  const counts = useMemo(() => {
+    const prompts = libraryResources.filter((r) => r.section === 'prompt').length
+    const backgrounds = libraryResources.filter((r) => r.section === 'background').length
+    const interactions = libraryResources.filter((r) => r.section === 'interaction' && !r.id.startsWith('codrops-')).length
+    const codrops = libraryResources.filter((r) => r.id.startsWith('codrops-')).length
+    const verifiedVideos = libraryResources.filter((r) => Boolean(r.previewVideoUrl)).length
+
+    return {
+      all: libraryResources.length,
+      prompts,
+      backgrounds,
+      interactions,
+      codrops,
+      verifiedVideos,
+    }
+  }, [])
+
+  // Available categories for current tab
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>()
+    libraryResources.forEach((r) => {
+      if (r.category) cats.add(r.category)
     })
-  }, [activeTab, query])
+    return Array.from(cats).sort()
+  }, [])
 
-  const totalResources = allResources.length
-  const catalogSummary = [
-    { label: 'Core prompts', value: coreCounts.prompts },
-    { label: 'Backgrounds', value: coreCounts.backgrounds },
-    { label: 'Interactions', value: coreCounts.interactions },
-    { label: 'Catalog cards', value: totalResources },
-  ]
+  // Available technologies
+  const availableTechs = useMemo(() => {
+    const techs = new Set<string>()
+    libraryResources.forEach((r) => {
+      r.technologies.forEach((t) => techs.add(t))
+    })
+    return Array.from(techs).sort()
+  }, [])
+
+  // Filtered resources
+  const filteredResources = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+
+    return libraryResources.filter((resource) => {
+      // Tab filter
+      if (activeTab === 'saved') {
+        if (!savedIds.has(resource.id)) return false
+      } else if (activeTab === 'prompt') {
+        if (resource.section !== 'prompt') return false
+      } else if (activeTab === 'background') {
+        if (resource.section !== 'background') return false
+      } else if (activeTab === 'interaction') {
+        if (resource.section !== 'interaction' || resource.id.startsWith('codrops-')) return false
+      } else if (activeTab === 'codrops') {
+        if (!resource.id.startsWith('codrops-')) return false
+      }
+
+      // Video only filter
+      if (videoOnly && !resource.previewVideoUrl) {
+        return false
+      }
+
+      // Category filter
+      if (selectedCategory && resource.category !== selectedCategory) {
+        return false
+      }
+
+      // Technology filter
+      if (selectedTech && !resource.technologies.includes(selectedTech)) {
+        return false
+      }
+
+      // Search query filter
+      if (q) {
+        const haystack = `${resource.title} ${resource.description} ${resource.category} ${resource.tags.join(' ')} ${resource.technologies.join(' ')} ${resource.prompt || ''}`.toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
+
+      return true
+    })
+  }, [activeTab, savedIds, videoOnly, selectedCategory, selectedTech, searchQuery])
+
+  // Reset filters
+  const hasActiveFilters = Boolean(
+    searchQuery || selectedCategory || selectedTech || videoOnly || (activeTab !== 'all' && activeTab !== 'saved')
+  )
+
+  const handleResetFilters = useCallback(() => {
+    setSearchQuery('')
+    setSelectedCategory('')
+    setSelectedTech('')
+    setVideoOnly(false)
+    setActiveTab('all')
+  }, [])
+
+  // Modal navigation
+  const currentModalIndex = useMemo(() => {
+    if (!activeModalResource) return -1
+    return filteredResources.findIndex((r) => r.id === activeModalResource.id)
+  }, [activeModalResource, filteredResources])
+
+  const handleNavigateNext = useCallback(() => {
+    if (filteredResources.length === 0 || currentModalIndex === -1) return
+    const nextIdx = (currentModalIndex + 1) % filteredResources.length
+    setActiveModalResource(filteredResources[nextIdx])
+  }, [filteredResources, currentModalIndex])
+
+  const handleNavigatePrev = useCallback(() => {
+    if (filteredResources.length === 0 || currentModalIndex === -1) return
+    const prevIdx = (currentModalIndex - 1 + filteredResources.length) % filteredResources.length
+    setActiveModalResource(filteredResources[prevIdx])
+  }, [filteredResources, currentModalIndex])
 
   return (
-    <div className="app-shell">
-      <header className="site-header">
-        <div className="brand">
-          <span className="brand-mark">DS</span>
-          <span className="brand-text">Dynamic Sites</span>
-        </div>
+    <div className="ds-app-shell">
+      {/* Toast Notification Container */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-        <nav className="top-nav" aria-label="Main navigation">
-          <a href="#library">Library</a>
-          <a href="#catalog">Catalog</a>
-          <a href="#external">External</a>
-        </nav>
-      </header>
+      {/* Global Navigation Bar */}
+      <Navbar
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        savedCount={savedIds.size}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        counts={{
+          all: counts.all,
+          prompts: counts.prompts,
+          backgrounds: counts.backgrounds,
+          interactions: counts.interactions,
+          codrops: counts.codrops,
+        }}
+      />
 
-      <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <p className="eyebrow">Resource library</p>
-            <h1>Build the remarkable.</h1>
-            <p className="lede">
-              A clean, organized collection of prompts, motion patterns, UI ideas, and attributed external references.
-            </p>
+      {/* Hero Section */}
+      <Hero
+        onSelectTab={setActiveTab}
+        activeTab={activeTab}
+        verifiedVideoCount={counts.verifiedVideos}
+        totalCount={counts.all}
+        promptCount={counts.prompts}
+        savedCount={savedIds.size}
+      />
 
-            <div className="hero-actions">
-              <a className="primary-button" href="#library">Explore library</a>
-              <a className="secondary-button" href="#catalog">View catalog</a>
+      {/* Main Library Section */}
+      <main className="ds-main-content">
+        <div className="ds-container">
+          {/* Filter Bar Controls */}
+          <FilterBar
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+            selectedTech={selectedTech}
+            onSelectTech={setSelectedTech}
+            availableCategories={availableCategories}
+            availableTechs={availableTechs}
+            resultCount={filteredResources.length}
+            hasActiveFilters={hasActiveFilters}
+            onResetFilters={handleResetFilters}
+            videoOnly={videoOnly}
+            onToggleVideoOnly={() => setVideoOnly(!videoOnly)}
+          />
+
+          {/* Cards Grid or Empty State */}
+          {activeTab === 'saved' && filteredResources.length === 0 ? (
+            <SavedEmptyState onBrowseAll={() => setActiveTab('all')} />
+          ) : filteredResources.length === 0 ? (
+            <div className="ds-empty-search-state">
+              <Search size={36} className="text-slate-500 mb-3" />
+              <h3>No matching resources found</h3>
+              <p>Try adjusting your search terms or clearing your category and technology filters.</p>
+              <button type="button" className="ds-btn-reset-empty" onClick={handleResetFilters}>
+                Clear all filters
+              </button>
             </div>
-
-            <div className="summary-grid">
-              {catalogSummary.map((item) => (
-                <div key={item.label} className="summary-card">
-                  <strong>{item.value}</strong>
-                  <span>{item.label}</span>
-                </div>
+          ) : (
+            <div className="ds-resource-grid">
+              {filteredResources.map((resource) => (
+                <ResourceCard
+                  key={resource.id}
+                  resource={resource}
+                  isSaved={savedIds.has(resource.id)}
+                  onToggleSave={handleToggleSave}
+                  onCopy={handleCopy}
+                  onOpenDetails={setActiveModalResource}
+                />
               ))}
             </div>
-          </div>
-
-          <div className="hero-panel">
-            <div className="panel-topline">Featured prompt</div>
-            <h2>AI Designer Agency</h2>
-            <p>
-              A landing-page direction built for strong hierarchy, cinematic motion, and modern conversion-focused storytelling.
-            </p>
-            <div className="panel-tags">
-              <span>Landing Page</span>
-              <span>React</span>
-              <span>Motion</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="library" id="library">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">Browse</p>
-              <h2>Resource library</h2>
-            </div>
-
-            <div className="search-wrap">
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search prompts, categories, skills, tags..."
-                aria-label="Search resources"
-              />
-            </div>
-          </div>
-
-          <div className="tabs" role="tablist" aria-label="Resource type tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                className={activeTab === tab.value ? 'tab active' : 'tab'}
-                onClick={() => setActiveTab(tab.value)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="results-row">
-            <span>{filtered.length} results</span>
-            <span>{sectionLabel[activeTab]}</span>
-          </div>
-
-          <div className="resource-grid">
-            {filtered.map((resource) => (
-              <article key={resource.id} className="resource-card">
-                <div className="card-visual" data-section={resource.section}>
-                  <span>{resource.type}</span>
-                </div>
-                <div className="card-body">
-                  <div className="card-meta">
-                    <span>{resource.section}</span>
-                    <span>{resource.category}</span>
-                  </div>
-                  <h3>{resource.title}</h3>
-                  <p>{resource.description}</p>
-
-                  <div className="tag-list">
-                    {resource.tags.slice(0, 3).map((tag) => (
-                      <span key={`${resource.id}-${tag}`}>{tag}</span>
-                    ))}
-                  </div>
-
-                  <div className="card-links">
-                    <a href={resource.sourceUrl} target="_blank" rel="noreferrer">
-                      Source
-                    </a>
-                    <a href={resource.liveUrl ?? resource.sourceUrl} target="_blank" rel="noreferrer">
-                      Preview
-                    </a>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section className="catalog" id="catalog">
-          <div className="section-head compact">
-            <div>
-              <p className="eyebrow">Scope</p>
-              <h2>Catalog overview</h2>
-            </div>
-          </div>
-
-          <div className="catalog-grid">
-            {externalCatalog.map((item) => (
-              <div key={item.label} className="catalog-card">
-                <strong>{item.count}{item.suffix ?? ''}</strong>
-                <span>{item.label}</span>
-                <small>{item.note}</small>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="external" id="external">
-          <div className="section-head compact">
-            <div>
-              <p className="eyebrow">External</p>
-              <h2>Attribution-first references</h2>
-            </div>
-          </div>
-
-          <div className="resource-grid compact-grid">
-            {allResources.filter((resource) => resource.section === 'external').slice(0, 6).map((resource) => (
-              <article key={resource.id} className="resource-card">
-                <div className="card-visual muted" data-section="external">
-                  <span>External</span>
-                </div>
-                <div className="card-body">
-                  <div className="card-meta">
-                    <span>{resource.type}</span>
-                    <span>{resource.category}</span>
-                  </div>
-                  <h3>{resource.title}</h3>
-                  <p>{resource.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+          )}
+        </div>
       </main>
+
+      {/* Resource Detail Inspection Modal */}
+      <ResourceModal
+        resource={activeModalResource}
+        isOpen={Boolean(activeModalResource)}
+        isSaved={Boolean(activeModalResource && savedIds.has(activeModalResource.id))}
+        onClose={() => setActiveModalResource(null)}
+        onToggleSave={handleToggleSave}
+        onCopy={handleCopy}
+        onNavigateNext={handleNavigateNext}
+        onNavigatePrev={handleNavigatePrev}
+        currentIndex={currentModalIndex}
+        totalCount={filteredResources.length}
+      />
+
+      {/* Footer (No GitHub links) */}
+      <footer className="ds-footer">
+        <div className="ds-footer-container">
+          <div className="ds-footer-brand">
+            <DynamicLogo size={32} />
+            <p className="ds-footer-desc">
+              Curated resource hub for AI website prompts, motion graphics, WebGL shaders, and high-impact interactions.
+            </p>
+          </div>
+
+          <div className="ds-footer-stats">
+            <div className="ds-footer-stat-item">
+              <strong>65</strong>
+              <span>Curated Prompts</span>
+            </div>
+            <div className="ds-footer-stat-item">
+              <strong>58</strong>
+              <span>Verified Videos</span>
+            </div>
+            <div className="ds-footer-stat-item">
+              <strong>12</strong>
+              <span>Shaders & Bg</span>
+            </div>
+            <div className="ds-footer-stat-item">
+              <strong>10</strong>
+              <span>Interactions</span>
+            </div>
+            <div className="ds-footer-stat-item">
+              <strong>10</strong>
+              <span>Codrops</span>
+            </div>
+          </div>
+
+          <div className="ds-footer-bottom">
+            <span>© 2026 Dynamic Sites · Built for modern web creators & AI builders</span>
+            <span className="ds-footer-tagline">Designed for Lovable, Cursor, Bolt & Claude</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

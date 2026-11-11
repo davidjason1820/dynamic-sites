@@ -1,3 +1,4 @@
+import { attachVideoPreviews } from "./videoPreviews"
 import { externalResources } from './externalData'
 
 export type ResourceSection = 'prompt' | 'background' | 'interaction' | 'external'
@@ -23,6 +24,9 @@ export type Resource = {
   commercialUse: boolean
   redistributionAllowed: boolean
   accent: string
+  previewVideoUrl?: string
+  previewImageUrl?: string
+  previewEmbedUrl?: string
 }
 
 const SOURCES = {
@@ -145,7 +149,23 @@ export const interactions: Resource[] = interactionNames.map(([title, type, sour
   }
 })
 
-export const allResources = [...prompts, ...backgrounds, ...interactions, ...externalResources]
+export const codropsResources = externalResources.filter(r => r.id.startsWith('codrops-'))
+export const collectionOverviewResources = externalResources.filter(r => r.id.startsWith('external-'))
+
+// Curated library resources for browsing (87 core + 10 Codrops = 97 genuine actionable cards)
+export const libraryResources: Resource[] = attachVideoPreviews([
+  ...prompts,
+  ...backgrounds,
+  ...interactions,
+  ...codropsResources,
+])
+
+export const allResources: Resource[] = attachVideoPreviews([
+  ...prompts,
+  ...backgrounds,
+  ...interactions,
+  ...externalResources,
+])
 
 export const coreCounts = {
   prompts: prompts.length,
