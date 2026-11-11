@@ -1,0 +1,120 @@
+[
+  {
+    "id": "codrops-3d-face-mask",
+    "title": "3D Face Mask with Three.js",
+    "type": "demo",
+    "category": "3D / MediaPipe / Webcam",
+    "technologies": ["Three.js", "MediaPipe", "Webcam"],
+    "liveUrl": "https://experiment-001.madebyhex.workers.dev/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=120430",
+    "sourceUrl": "https://github.com/kaltwrk/experiment-001",
+    "license": "Verify repository license before copying",
+    "actions": ["live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-unwoven",
+    "title": "Unwoven",
+    "type": "demo",
+    "category": "Marquee / Three.js / WebGL",
+    "technologies": ["Three.js", "WebGL", "Marquee"],
+    "liveUrl": "https://tympanus.net/Development/Unwoven/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=120129",
+    "sourceUrl": "https://github.com/clementgrellier/unwoven",
+    "license": "Verify repository license before copying",
+    "actions": ["live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-ascii-logo",
+    "title": "ASCII Logo in Three.js",
+    "type": "code",
+    "category": "3D / ASCII / GLSL",
+    "technologies": ["Three.js", "GLSL", "WebGL"],
+    "liveUrl": "https://tympanus.net/Tutorials/ASCIILogo/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=120018",
+    "sourceUrl": "https://github.com/edoardolunardi/ascii-logo",
+    "license": "Verify repository license before copying",
+    "actions": ["copy-code", "live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-datamosh",
+    "title": "Three.js Datamosh Effect",
+    "type": "code",
+    "category": "3D / GLSL / Postprocessing",
+    "technologies": ["Three.js", "GLSL", "Postprocessing"],
+    "liveUrl": "https://tympanus.net/Tutorials/Datamosh/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=119915",
+    "sourceUrl": "https://github.com/niccolofanton/data-mosh",
+    "license": "Verify repository license before copying",
+    "actions": ["copy-code", "live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-dreamfold",
+    "title": "Dreamfold",
+    "type": "demo",
+    "category": "3D / Map / WebGL",
+    "technologies": ["Three.js", "WebGL", "Map"],
+    "liveUrl": "https://cityfold.vercel.app/",
+    "sourceUrl": "https://github.com/Makio64/dreamfold",
+    "license": "Verify repository license before copying",
+    "actions": ["live-preview", "open-source"]
+  },
+  {
+    "id": "codrops-footballs-motion",
+    "title": "Footballs in Motion",
+    "type": "code",
+    "category": "3D / GSAP / Physics",
+    "technologies": ["Three.js", "GSAP", "Physics"],
+    "liveUrl": "https://footballs.nestorrig.com/",
+    "sourceUrl": "https://github.com/nestorrig/footballs",
+    "license": "Verify repository license before copying",
+    "actions": ["copy-code", "live-preview", "open-source"]
+  },
+  {
+    "id": "codrops-eiffel-catapult",
+    "title": "Eiffel Tower Catapult with Three.js",
+    "type": "demo",
+    "category": "3D / Physics / Map",
+    "technologies": ["Three.js", "Physics", "Map"],
+    "liveUrl": "https://tympanus.net/Development/EiffelCatapult/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=119976",
+    "sourceUrl": "https://github.com/akella/threejs.paris",
+    "license": "Verify repository license before copying",
+    "actions": ["live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-volatile-nexus",
+    "title": "Volatile Nexus",
+    "type": "demo",
+    "category": "3D / Particles / TSL",
+    "technologies": ["Three.js", "Particles", "TSL"],
+    "liveUrl": "https://dasprinzip.com/tinker/day42/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=120121",
+    "sourceUrl": "https://github.com/prinzipiell/tsl/tree/main/volatile-nexus",
+    "license": "Verify repository license before copying",
+    "actions": ["live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-lens-distortion",
+    "title": "Mouse-Following Square Lens Distortion",
+    "type": "code",
+    "category": "Cursor / Distortion / WebGL",
+    "technologies": ["Three.js", "Cursor", "RGB Shift"],
+    "liveUrl": "https://tympanus.net/Tutorials/PointerSquareLensDistortion",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=119046",
+    "sourceUrl": "https://github.com/tomoyukinakata/mouse-following-square-lens-effect",
+    "license": "Verify repository license before copying",
+    "actions": ["copy-code", "live-preview", "read-tutorial", "open-source"]
+  },
+  {
+    "id": "codrops-infinite-scroll-gallery",
+    "title": "Infinite Scroll Gallery with GSAP Page Transitions",
+    "type": "code",
+    "category": "GSAP / Scroll / Page Transitions",
+    "technologies": ["GSAP", "Scroll", "Parallax", "Page Transitions"],
+    "liveUrl": "https://tympanus.net/Tutorials/InfiniteScrollGSAPGallery/",
+    "tutorialUrl": "https://tympanus.net/codrops/?p=118084",
+    "sourceUrl": "https://github.com/surya-aditya/codrops-infinite-scroll-and-content-transition",
+    "license": "Verify repository license before copying",
+    "actions": ["copy-code", "live-preview", "read-tutorial", "open-source"]
+  }
+]

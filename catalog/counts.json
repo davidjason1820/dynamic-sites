@@ -1,0 +1,82 @@
+{
+  "core": {
+    "prompts": 65,
+    "backgrounds": 12,
+    "interactions": 10,
+    "total": 87
+  },
+  "externalCatalogedUnits": 13020,
+  "externalCollections": [
+    [
+      "motionsites-extended-prompts",
+      "External prompts",
+      813,
+      "https://github.com/nomaan5541/motionsites-prompt-collection",
+      "MIT stated by repository; inspect bundled media and preserve license."
+    ],
+    [
+      "motionsites-claude-prompts",
+      "Claude prompts",
+      40,
+      "https://github.com/Motionsites-AI/claude-skill",
+      "Code/instructions MIT; example prompts and media retain original terms."
+    ],
+    [
+      "cinematic-videos",
+      "Cinematic videos",
+      "50+",
+      "https://github.com/Motionsites-AI/claude-skill",
+      "External media references; do not redistribute without clearance."
+    ],
+    [
+      "transparent-3d-cutouts",
+      "Transparent 3D cut-outs",
+      30,
+      "https://github.com/Motionsites-AI/claude-skill",
+      "External media references; verify per-item terms."
+    ],
+    [
+      "images",
+      "Images",
+      29,
+      "https://github.com/Motionsites-AI/claude-skill",
+      "External media references; verify per-item terms."
+    ],
+    [
+      "technique-recipes",
+      "Technique recipes",
+      "55+",
+      "https://github.com/Motionsites-AI/claude-skill",
+      "Code/instructions MIT where stated; preserve attribution."
+    ],
+    [
+      "react-bits",
+      "React Bits components/backgrounds",
+      "215+",
+      "https://github.com/DavidHDev/react-bits",
+      "MIT + Commons Clause; review item-level terms."
+    ],
+    [
+      "open-source-glb-assets",
+      "Open-source GLB models",
+      "991+",
+      "https://github.com/toxsam/open-source-3D-assets",
+      "Registry and individual collections retain their own licenses."
+    ],
+    [
+      "poly-pizza-models",
+      "Poly Pizza models",
+      "10,700+",
+      "https://poly.pizza/",
+      "Per-model Creative Commons terms; check each model."
+    ],
+    [
+      "codrops-entries",
+      "Codrops entries",
+      10,
+      "https://tympanus.net/codrops/hub/all/",
+      "Check each linked repository and demo license individually."
+    ]
+  ],
+  "note": "Counts are inventory records; they do not imply ownership or permission to redistribute third-party assets."
+}

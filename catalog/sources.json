@@ -1,0 +1,48 @@
+{
+  "policy": "External sources are attributed and are not represented as owned by Dynamic Sites.",
+  "sources": {
+    "prompts": [
+      "https://github.com/xiiiabu/motionsites.ai",
+      "https://github.com/nomaan5541/motionsites-prompt-collection",
+      "https://github.com/Motionsites-AI/claude-skill"
+    ],
+    "code": [
+      "https://github.com/shadcn-ui/ui",
+      "https://github.com/magicuidesign/magicui",
+      "https://github.com/DavidHDev/react-bits",
+      "https://reactbits.dev/",
+      "https://ui.aceternity.com/"
+    ],
+    "webgl": [
+      "https://github.com/mrdoob/three.js",
+      "https://threejs.org/examples/",
+      "https://github.com/zakky8/web-optimization"
+    ],
+    "codrops": [
+      "https://tympanus.net/codrops/hub/all/",
+      "https://github.com/kaltwrk/experiment-001",
+      "https://github.com/clementgrellier/unwoven",
+      "https://github.com/edoardolunardi/ascii-logo",
+      "https://github.com/niccolofanton/data-mosh",
+      "https://github.com/Makio64/dreamfold",
+      "https://github.com/nestorrig/footballs",
+      "https://github.com/akella/threejs.paris",
+      "https://github.com/prinzipiell/tsl/tree/main/volatile-nexus",
+      "https://github.com/tomoyukinakata/mouse-following-square-lens-effect",
+      "https://github.com/surya-aditya/codrops-infinite-scroll-and-content-transition"
+    ],
+    "assets": [
+      "https://polyhaven.com/",
+      "https://ambientcg.com/",
+      "https://quaternius.com/",
+      "https://quaternius.com/license.html",
+      "https://poly.pizza/",
+      "https://poly.pizza/docs/tos",
+      "https://github.com/toxsam/open-source-3D-assets",
+      "https://opensource3dassets.com/",
+      "https://github.com/madjin/awesome-cc0",
+      "https://kenney.nl/assets",
+      "https://sketchfab.com/search?features=downloadable&licenses=7c23a1ba438d4306920229c12afcb5f9&type=models"
+    ]
+  }
+}

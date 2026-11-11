@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dynamic Sites Resource",
+  "type": "object",
+  "required": ["id", "title", "type", "sourceUrl", "license"],
+  "properties": {
+    "id": {"type": "string"},
+    "title": {"type": "string"},
+    "type": {"enum": ["prompt", "code", "component", "background", "3d-model", "texture", "hdri", "shader", "demo", "tutorial", "resource"]},
+    "category": {"type": "string"},
+    "technologies": {"type": "array", "items": {"type": "string"}},
+    "description": {"type": "string"},
+    "prompt": {"type": "string"},
+    "code": {"type": "string"},
+    "installCommand": {"type": "string"},
+    "liveUrl": {"type": "string", "format": "uri"},
+    "sourceUrl": {"type": "string", "format": "uri"},
+    "tutorialUrl": {"type": "string", "format": "uri"},
+    "assetUrl": {"type": "string", "format": "uri"},
+    "license": {"type": "string"},
+    "attribution": {"type": "string"},
+    "commercialUse": {"type": "boolean"},
+    "redistributionAllowed": {"type": "boolean"},
+    "verifiedAt": {"type": "string", "format": "date"}
+  }
+}
