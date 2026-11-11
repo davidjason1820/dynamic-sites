@@ -1,16 +1,17 @@
-import { allResources } from './data'
+import type { Resource } from './data'
 
 /**
- * Verified video files listed in the public MotionSites prompt repository.
- * These are external preview links, not media copied into this repository.
- * Prompts without a matching file retain the labeled concept-preview fallback.
+ * Verified video files from the public xiiiabu/motionsites.ai repository.
+ * Base: https://raw.githubusercontent.com/xiiiabu/motionsites.ai/main/assets/videos/
+ *
+ * Exactly 58 of the 65 prompts have verified video previews in the repository.
+ * The remaining 7 prompts use a clearly labeled "Concept preview" fallback.
  */
-const motionSitesVideos: Record<string, string> = {
+export const motionSitesVideos: Record<string, string> = {
   'AI Designer Agency': 'AI_Designer_Agency_0.mp4',
   'AKOR Security': 'AKOR_Security_0.mp4',
   'ClubX Investors': 'ClubX_Investors_0.mp4',
   'CodeNest Coding Platform': 'CodeNest_Coding_Platform_0.mp4',
-  'E-commerce Website': 'E-commerce_Website_0.mp4',
   'Liquid Glass Agency': 'Liquid_Glass_Agency_0.mp4',
   'Mindloop Landing': 'Mindloop_Landing_0.mp4',
   'NeoVision': 'NeoVision_0.mp4',
@@ -30,7 +31,6 @@ const motionSitesVideos: Record<string, string> = {
   'Grow AI Talent Platform': 'Grow_AI_Talent_Platform_0.mp4',
   'HR SaaS Hero': 'HR_SaaS_Hero_0.mp4',
   'Mindloop SaaS': 'Mindloop_0.mp4',
-  'Mindloop': 'Mindloop_0.mp4',
   'Neuralyn SaaS': 'Neuralyn_0.mp4',
   'Nexora Automation': 'Nexora_Automation_0.mp4',
   'Nickel Payments': 'Nickel_Payments_0.mp4',
@@ -52,22 +52,37 @@ const motionSitesVideos: Record<string, string> = {
   'Taskly': 'Taskly_0.webm',
   'Transform Data': 'Transform_Data_0.mp4',
   'xPortfolio Hero': 'xPortfolio_Hero_0.mp4',
-  'Loader Animation': 'Loader_Animation_0.mp4',
   'New Era Automotive Hero': 'New_Era_Automotive_Hero_0.mp4',
+  'Orbit Web3': 'Orbit_Web3_0.mp4',
+  'Web3 EOS Hero': 'Web3_EOS_Hero_0.mp4',
   'Buzzentic Agency': 'Buzzentic_Agency_0.mp4',
-  'Glassmorphism Agency Hero': 'Glassmorphism_Agency_Hero_0.mp4',
   'New Era Bold Hero': 'New_Era_Bold_Hero_0.mp4',
   'Framelix 3D Studios': 'Framelix_3D_Studios_0.mp4',
   'Logoisum Video Agency': 'Logoisum_Video_Agency_0.mp4',
-  'Bold Portfolio Hero': 'Bold_Portfolio_Hero_0.mp4',
+  'Orbit Engineers': 'Orbit_Engineers_0.mp4',
+  'Velorah Agency': 'Velorah_0.mp4',
+  'Wealth Video Hero': 'Wealth_Video_Hero_0.mp4',
+  'Investor Deck': 'Investor_Deck_0.mp4',
   'Dark Portfolio Hero': 'Dark_Portfolio_Hero_0.mp4',
   'Portfolio Cosmic': 'Portfolio_Cosmic_0.mp4',
   'Viktor Portfolio': 'Viktor_Portfolio_0.mp4',
 }
 
-const videoBase = 'https://raw.githubusercontent.com/xiiiabu/motionsites.ai/main/assets/videos/'
+export const VIDEO_BASE_URL = 'https://raw.githubusercontent.com/xiiiabu/motionsites.ai/main/assets/videos/'
 
-for (const resource of allResources) {
-  const filename = motionSitesVideos[resource.title]
-  if (filename) Object.assign(resource, { previewVideoUrl: `${videoBase}${encodeURIComponent(filename).replaceAll('%2F', '/')}` })
+/**
+ * Attaches verified preview video URLs to resource records.
+ */
+export function attachVideoPreviews(resources: Resource[]): Resource[] {
+  return resources.map((resource) => {
+    const filename = motionSitesVideos[resource.title]
+    if (filename) {
+      const sanitized = encodeURIComponent(filename).replace(/%2F/g, '/')
+      return {
+        ...resource,
+        previewVideoUrl: `${VIDEO_BASE_URL}${sanitized}`,
+      }
+    }
+    return resource
+  })
 }
